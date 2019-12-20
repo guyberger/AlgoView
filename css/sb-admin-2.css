@@ -89,6 +89,11 @@ p {
   margin-bottom: 1rem;
 }
 
+.action-right{
+  display: flex;
+  align-items: flex-end;
+}
+
 abbr[title],
 abbr[data-original-title] {
   text-decoration: underline;
@@ -591,11 +596,18 @@ pre code {
   margin-left: auto;
 }
 
+
+
 .row {
+  direction: rtl;
   display: flex;
   flex-wrap: wrap;
   margin-right: -0.75rem;
   margin-left: -0.75rem;
+}
+
+.action-right{
+  float: right;
 }
 
 .no-gutters {
@@ -10998,3 +11010,5 @@ footer.sticky-footer .copyright {
 body.sidebar-toggled footer.sticky-footer {
   width: 100%;
 }
+
+

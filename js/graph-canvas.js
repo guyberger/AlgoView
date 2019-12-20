@@ -1,3 +1,9 @@
+function resizeCanvas(id){
+    var canvas = document.getElementById(id);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
 var drawGrid = function(w, h, id) {
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
@@ -29,4 +35,5 @@ var drawGrid = function(w, h, id) {
     }
     img.src = url;
 }
-drawGrid(600, 300, "graphMap");
+resizeCanvas("graphMap");
+drawGrid(window.innerWidth, window.innerHeight, "graphMap");
