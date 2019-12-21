@@ -6,6 +6,11 @@ var w = grid - 1;
 var h = grid - 1;
 var starting_point = [grid * 10 + 1, grid * 15 + 1];
 var end_point = [grid * 40 + 1, grid * 15 + 1];
+var canvas = document.getElementById(id);
+var walls = {};
+
+var offsetx = document.getElementById('accordionSidebar').offsetWidth;
+var offsety = document.getElementById('topbar').offsetHeight;
 
 cleanCanvas(id);
 
@@ -77,17 +82,21 @@ class PriorityQueue {
   }
 }
 
+function pointToString(p){
+    return p[0].toString() + '+' + p[1].toString();
+}
+
 function resizeCanvas(id){
     var canvas = document.getElementById(id);
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth - offsetx;
+    canvas.height = window.innerHeight - offsety ;
 }
 
  function drawGrid(w, h, id) {
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
-    ctx.canvas.width  = w;
-    ctx.canvas.height = h;
+    ctx.canvas.width  = w - offsetx;
+    ctx.canvas.height = h - offsety ;
     
     var data = '<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"> \
         <defs> \
@@ -131,12 +140,22 @@ function drawStartingPosition(id, grid){
 
 }
 
+function drawWalls(){
+    for (var key in walls){
+        var canvas = document.getElementById(id);
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.fillRect(walls[key][0] + 1, walls[key][1] + 1, grid-1, grid-1);
+    }
+}
+
 function cleanCanvas(id){
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width - offsetx, canvas.height - offsety);
     drawGrid(window.innerWidth, window.innerHeight, id);
     drawStartingPosition(id, grid);  // width of box on grid
+    drawWalls(id);
 }
 
 function sleep(ms) {
@@ -170,6 +189,10 @@ function heuristicAstar(curr_point){
     var x = curr_point[0], y = curr_point[1];
     var ex = end_point[0], ey = end_point[1];
     return Math.pow(Math.pow(y - ey, 2) + Math.pow(x - ex, 2), 0.5);
+}
+
+function isWall(s){     // string of point: "x+y"
+    return (s in walls);
 }
 
 // paths are nested arrays
@@ -221,8 +244,8 @@ async function bfs(){
                 }
                 var x = px + (dx * grid);
                 var y = py + (dy * grid);
-                var s = x.toString() + "+" + y.toString();
-                if(s in hist || x < 0 || y < 0 || x >= window.width || y >= window.height){
+                var s = pointToString([x, y]);
+                if(s in hist || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height || isWall(s)){
                     continue;
                 }
                 hist[s] = 1;
@@ -238,6 +261,7 @@ async function bfs(){
             }
         }
     }
+    console.log("done");
 }
 
 async function dfs(){
@@ -253,14 +277,20 @@ async function dfs(){
         var px = p[0];
         var py = p[1];
 
+        if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
+        }
+
+
         // reached goal
         if(px == end_point[0] && py == end_point[1]){
+            console.log("reached goal");
             for(var i = 1; i < curr_path.length; i++){
                 var point = curr_path[i];
                 var x = point[0];
                 var y = point[1];
                 // Skip start and end drawing
-                if((x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
+                if(isWall(s) || (x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
                     continue;
                 }
                 drawRectangle(id, x, y, grid - 1, grid - 1, 'yellow');
@@ -277,8 +307,8 @@ async function dfs(){
                 }
                 var x = px + (dx * grid);
                 var y = py + (dy * grid);
-                var s = x.toString() + "+" + y.toString();
-                if(s in curr_path[0] || x < 0 || y < 0 || x >= window.width || y >= window.height){
+                var s = pointToString([x, y]);
+                if(isWall(s) || s in curr_path[0] || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
                     continue;
                 }
                 curr_path[0][s] = 1;
@@ -287,9 +317,6 @@ async function dfs(){
                 if((x == starting_point[0] && y == starting_point[1])){
                     continue;
                 }
-                if(x != end_point[0] || y != end_point[1]){
-                    drawRectangle(id, x, y, grid - 1, grid - 1, 'green');
-                }
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
                 stack.push(new_path);
@@ -297,6 +324,7 @@ async function dfs(){
         }
         await sleep(time_sleep);
     }
+    console.log("done");
 }
 
 async function dijkstra(){
@@ -321,14 +349,20 @@ async function astar(){
         var px = p[0];
         var py = p[1];
 
+        if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
+        }
+
         // reached goal
         if(px == end_point[0] && py == end_point[1]){
             for(var i = 1; i < curr_path.length; i++){
                 var point = curr_path[i];
                 var x = point[0];
                 var y = point[1];
+
                 // Skip start and end drawing
-                if((x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
+                var s = pointToString([x, y]);
+                if(isWall(s) || (x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
                     continue;
                 }
                 drawRectangle(id, x, y, grid - 1, grid - 1, 'yellow');
@@ -345,7 +379,8 @@ async function astar(){
                 }
                 var x = px + (dx * grid);
                 var y = py + (dy * grid);
-                if(x < 0 || y < 0 || x >= window.width || y >= window.height){
+                var s = pointToString([x, y]);
+                if(isWall(s) || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
                     continue;
                 }
                 
@@ -362,9 +397,9 @@ async function astar(){
                     continue;
                 }
 
-                if(x != end_point[0] || y != end_point[1]){
-                    drawRectangle(id, x, y, grid - 1, grid - 1, 'green');
-                }
+                // if(x != end_point[0] || y != end_point[1]){
+                //     drawRectangle(id, x, y, grid - 1, grid - 1, 'green');
+                // }
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
                 pq.push([n_astar_dist, new_path]);
@@ -372,4 +407,40 @@ async function astar(){
         }
         await sleep(time_sleep);
     }
+    console.log("done");
 }
+
+function alignToSVG(x, y){
+    while(x % grid){
+        x--;
+    }
+    while(y % grid){
+        y--;
+    }
+    return [x, y];
+}
+
+var mouseClicked = false, mouseReleased = true, drawingAllowed = false;
+
+document.getElementById(id).addEventListener("click", onMouseClick, false);
+document.getElementById(id).addEventListener("mousemove", onMouseMove, false);
+
+function onMouseClick(e) {
+    mouseClicked = !mouseClicked;
+}
+
+function onMouseMove(e) {
+    if (mouseClicked) {
+        var offsetx = document.getElementById('accordionSidebar').offsetWidth;
+        var offsety = document.getElementById('topbar').offsetHeight;
+        console.log("Clicked on canvas, x: " + e.clientX + ", y: " + e.clientY);
+        var point = alignToSVG(e.clientX - offsetx, e.clientY - offsety);
+        console.log("aligned, x: " + point[0] + ", y: " + point[1]);
+        drawRectangle(id, point[0] + 1, point[1] + 1, w, h, 'black');
+
+        // add to walls
+        var s = pointToString([point[0] + 1, point[1] + 1]);
+        walls[s] = [point[0], point[1]];
+    }
+}
+
