@@ -21,6 +21,8 @@
 
   <!-- Custom styles for this template-->
   <link href="css/sb-admin-2.min.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
+
 
 </head>
 
@@ -341,7 +343,7 @@
             <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
               <a class="dropdown-item" href="#">Draw walls</a>
               <a class="dropdown-item" href="#">Add goal</a>
-              <a class="dropdown-item" href="#"><b>Witness!</b></a>
+              <a class="dropdown-item" onclick="bfs()" id="witness_btn"><b>Witness!</b></a>
             </div>
           </div>         
 
@@ -407,6 +409,9 @@
 
   <!-- Graph canvas -->
   <script src="js/graph-canvas.js"></script>
+
+  <!-- bfs run -->
+  <script src="js/search.js"></script>
 
 </body>
 
