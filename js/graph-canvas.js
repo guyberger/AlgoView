@@ -35,5 +35,26 @@ var drawGrid = function(w, h, id) {
     }
     img.src = url;
 }
-resizeCanvas("graphMap");
-drawGrid(window.innerWidth, window.innerHeight, "graphMap");
+
+function drawStartingPosition(id, grid){
+    var canvas = document.getElementById(id);
+    var ctx = canvas.getContext('2d');
+
+    // draw beginning point
+    var start_point_x = grid * 20 + 1;
+    var start_point_y = grid * 30 + 1;
+    var end_point_x = grid * 100 + 1;
+    var end_point_y = start_point_y;
+    ctx.fillStyle = 'red';
+    ctx.fillRect(start_point_x, start_point_y, grid-1, grid-1);
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(end_point_x, end_point_y, grid-1, grid-1);
+
+}
+
+
+var id_graph = "graphMap";
+
+resizeCanvas(id_graph);
+drawGrid(window.innerWidth, window.innerHeight, id_graph);
+drawStartingPosition(id_graph, 8);  // width of box on grid
