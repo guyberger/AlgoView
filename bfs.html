@@ -148,6 +148,7 @@
     <!-- End of Sidebar -->
 
     <!-- Content Wrapper -->
+    
     <div id="content-wrapper" class="d-flex flex-column">
 
       <!-- Main Content -->
@@ -330,6 +331,12 @@
 
         <canvas id="graphMap">
         </canvas>
+        <div id="start_icon">
+          <i class="fas fa-map-marker-alt" id="start_icon_pic"></i>
+        </div>  
+        <div id="end_icon">
+          <i class="fas fa-flag-checkered" id="end_icon_pic"></i>
+        </div> 
 
         <!-- Begin Page Content -->
         <div class="container-fluid">
@@ -343,14 +350,14 @@
             <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
               <a class="dropdown-item" href="#" id="draw_walls">Draw walls (off)</a>
               <a class="dropdown-item" href="#" id="restart_search">Restart</a>
-              <a class="dropdown-item" onclick="bfs()" id="witness_btn"><b>Witness!</b></a>
+              <a class="dropdown-item" onclick="startSearch('bfs')" id="witness_btn"><b>Witness!</b></a>
             </div>
           </div>         
 
         </div>
         
+        
         <!-- /.container-fluid -->
-
       </div>
       <!-- End of Main Content -->
 
@@ -412,6 +419,9 @@
 
   <!-- bfs run -->
   <script src="js/search.js"></script>
+
+  <!-- utilities -->
+  <script src="js/utils.js"></script>
 
 </body>
 

@@ -16,12 +16,32 @@ var offsety = document.getElementById('topbar').offsetHeight;
 
 var can_draw = false;
 
+var start_icon_name = 'start_icon_pic';
+var end_icon_name = 'end_icon_pic';
+
+
 cleanCanvas(id);
 
 const _top = 0;
 const parent = i => ((i + 1) >>> 1) - 1;
 const left = i => (i << 1) + 1;
 const right = i => (i + 1) << 1;
+
+function getStartEndPoint(){
+    var sp = document.getElementById(start_icon_name);
+    var rect = sp.getBoundingClientRect();
+    console.log(rect.top, rect.right, rect.bottom, rect.left);
+    var x = parseInt((rect.left + rect.right) / 2) - offsetx, y = parseInt((rect.top + rect.bottom) / 2) - offsety;
+    var p = alignToSVG(x, y);
+    starting_point = [p[0] + 1, p[1] + 1];
+    sp = document.getElementById(end_icon_name);
+    rect = sp.getBoundingClientRect();
+    console.log(rect.top, rect.right, rect.bottom, rect.left);
+    x = parseInt((rect.left + rect.right) / 2) - offsetx;
+    y = parseInt((rect.top + rect.bottom) / 2) - offsety;
+    p = alignToSVG(x, y);
+    end_point = [p[0] + 1, p[1] + 1];
+}
 
 class PriorityQueue {
   constructor(comparator = (a, b) => a > b) {
@@ -128,22 +148,6 @@ function resizeCanvas(id){
     img.src = url;
 }
 
-function drawStartingPosition(id, grid){
-    var canvas = document.getElementById(id);
-    var ctx = canvas.getContext('2d');
-
-    // draw beginning point
-    var start_point_x = starting_point[0];
-    var start_point_y = starting_point[1];
-    var end_point_x = end_point[0];
-    var end_point_y = end_point[1];
-    ctx.fillStyle = 'red';
-    ctx.fillRect(start_point_x, start_point_y, grid-1, grid-1);
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(end_point_x, end_point_y, grid-1, grid-1);
-
-}
-
 function drawWalls(){
     for (var key in walls){
         var canvas = document.getElementById(id);
@@ -158,7 +162,6 @@ function cleanCanvas(id, clean_walls){
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width - offsetx, canvas.height - offsety);
     drawGrid(window.innerWidth, window.innerHeight, id);
-    drawStartingPosition(id, grid);  // width of box on grid
     if(clean_walls == undefined)
         drawWalls(id);
     else
@@ -195,16 +198,41 @@ function drawBfsStage(id, q, len){
 function heuristicAstar(curr_point){
     var x = curr_point[0], y = curr_point[1];
     var ex = end_point[0], ey = end_point[1];
-    return Math.pow(Math.pow(y - ey, 2) + Math.pow(x - ex, 2), 0.5);
+    return Math.sqrt(Math.pow(y - ey, 2) + Math.pow(x - ex, 2));
 }
 
 function isWall(s){     // string of point: "x+y"
     return (s in walls);
 }
 
+function updateOffset(){
+    offsetx = document.getElementById('accordionSidebar').offsetWidth;
+    offsety = document.getElementById('topbar').offsetHeight;
+}
+
+// Every search algo starts here
+function startSearch(algo){
+    updateOffset();
+    getStartEndPoint();
+    cleanCanvas(id);
+    switch(algo){
+        case 'bfs':
+            bfs();
+            break;
+        case 'dfs':
+            dfs();
+            break;
+        case 'dijkstra':
+            dijkstra();
+            break;
+        default:    // astar
+            astar();
+            break;
+    }
+}
+
 // paths are nested arrays
 async function bfs(){
-    cleanCanvas(id);
     var hist = {};
     var q = [];
     var starting_path = [starting_point];
@@ -275,7 +303,6 @@ async function bfs(){
 }
 
 async function dfs(){
-    cleanCanvas(id);
     var stack = [];
     var starting_path = [starting_point];
     var visited = {};
@@ -349,7 +376,6 @@ async function dijkstra(){
 }
 
 async function astar(){
-    cleanCanvas(id);
     var pq = new PriorityQueue((a, b) => a[0] < b[0]);
     var starting_path = [starting_point]; 
     pq.push([infinity, starting_path]);
@@ -361,10 +387,15 @@ async function astar(){
         var curr_path = curr_path_with_hu[1];
         var curr_hu = curr_path_with_hu[0];  
         var curr_dist = curr_path.length - 2;   // not including first node and history
-        var to_beat = curr_dist + curr_hu;  // best distance + huristic path to goal
+        var to_beat = curr_hu;  // distance + huristic path to goal
         var p = curr_path[curr_path.length - 1];    // get latest point in path.    p: [x, y]
         var px = p[0];
         var py = p[1];
+
+        var s = pointToString([px, py]);
+        if(s in visited)
+            continue;
+        visited[s] = 1;    // add node to visited
 
         if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
             drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
@@ -407,19 +438,17 @@ async function astar(){
                     continue;
                 }
 
-                visited[s] = 1;    // add node to visited
-
-                // draw neighbours
-                if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
-                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
-                }
-
                 // filter neighbours with worse astar dist
                 var n_huristic = heuristicAstar([x, y]);
-                var n_dist = curr_dist + 1;
+                var n_dist = (curr_dist + 1) * grid;    // how many grids we've walked so far
                 var n_astar_dist = n_huristic + n_dist;
-                if(n_astar_dist > to_beat){
-                    continue;
+                // if(n_astar_dist > to_beat){
+                //     continue;
+                // }
+
+                // draw neighbours
+                if((x != starting_point[0] || y != starting_point[1]) && (x != end_point[0] || y != end_point[1])){
+                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
                 }
 
                 // if(x != end_point[0] || y != end_point[1]){
@@ -427,8 +456,9 @@ async function astar(){
                 // }
                 added = true;
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
+                let new_dist = JSON.parse(JSON.stringify(n_astar_dist));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
-                pq.push([n_astar_dist, new_path]);
+                pq.push([new_dist, new_path]);
             }
         }
         await sleep(time_sleep);
