@@ -9,8 +9,12 @@ var end_point = [grid * 40 + 1, grid * 15 + 1];
 var canvas = document.getElementById(id);
 var walls = {};
 
+var infinity = 99999;
+
 var offsetx = document.getElementById('accordionSidebar').offsetWidth;
 var offsety = document.getElementById('topbar').offsetHeight;
+
+var can_draw = false;
 
 cleanCanvas(id);
 
@@ -149,13 +153,16 @@ function drawWalls(){
     }
 }
 
-function cleanCanvas(id){
+function cleanCanvas(id, clean_walls){
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width - offsetx, canvas.height - offsety);
     drawGrid(window.innerWidth, window.innerHeight, id);
     drawStartingPosition(id, grid);  // width of box on grid
-    drawWalls(id);
+    if(clean_walls == undefined)
+        drawWalls(id);
+    else
+        walls = {};
 }
 
 function sleep(ms) {
@@ -179,7 +186,7 @@ function drawBfsStage(id, q, len){
         }
         var p = path[path.length - 1];
         if(p[0] != end_point[0] || p[1] != end_point[1]){
-            drawRectangle(id, p[0], p[1], w, h, 'green');
+            drawRectangle(id, p[0], p[1], w, h, 'blue');
         }  
     }
 }
@@ -227,12 +234,15 @@ async function bfs(){
             break;
         }
 
+        if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
+        }
+
         // draw stage
         if(curr_path.length - 1 >= dist){
             console.log("stage: " + dist);
             dist++;
             drawBfsStage(id, q, curr_path.length);
-            drawRectangle(id, px, py, w, h, 'green');
             await sleep(time_sleep);
         }
 
@@ -267,7 +277,8 @@ async function bfs(){
 async function dfs(){
     cleanCanvas(id);
     var stack = [];
-    var starting_path = [{}, starting_point];   // first item is the path history tiles
+    var starting_path = [starting_point];
+    var visited = {};
     stack.push(starting_path);
 
     // perform dfs search
@@ -308,15 +319,21 @@ async function dfs(){
                 var x = px + (dx * grid);
                 var y = py + (dy * grid);
                 var s = pointToString([x, y]);
-                if(isWall(s) || s in curr_path[0] || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+                if((s in visited) || isWall(s) || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
                     continue;
                 }
-                curr_path[0][s] = 1;
+                visited[s] = 1;
                 
                 // Skip start and end drawing
                 if((x == starting_point[0] && y == starting_point[1])){
                     continue;
                 }
+
+                // draw neighbours
+                if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
+                }
+
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
                 stack.push(new_path);
@@ -334,16 +351,16 @@ async function dijkstra(){
 async function astar(){
     cleanCanvas(id);
     var pq = new PriorityQueue((a, b) => a[0] < b[0]);
-    var dist_to_goal = heuristicAstar(starting_point);
-    var starting_path = [starting_point];   // first item is the 
-    pq.push([dist_to_goal, starting_path]);
+    var starting_path = [starting_point]; 
+    pq.push([infinity, starting_path]);
+    var visited = {};
 
     // perform dfs search
     while(!pq.isEmpty()){
         var curr_path_with_hu = pq.pop();   // get best priority path (shortest dist).    path: [[x1, y1], [x2, y2], ...]
         var curr_path = curr_path_with_hu[1];
         var curr_hu = curr_path_with_hu[0];  
-        var curr_dist = curr_path.length - 1;   // not including first node
+        var curr_dist = curr_path.length - 2;   // not including first node and history
         var to_beat = curr_dist + curr_hu;  // best distance + huristic path to goal
         var p = curr_path[curr_path.length - 1];    // get latest point in path.    p: [x, y]
         var px = p[0];
@@ -372,6 +389,7 @@ async function astar(){
         }
 
         // Adding neighbours
+        var added = false;
         for(var dx = -1; dx < 2; dx++){
             for(var dy = -1; dy < 2; dy++){
                 if(dy * dy == dx * dx){     // skip diagonal neighbours
@@ -380,13 +398,20 @@ async function astar(){
                 var x = px + (dx * grid);
                 var y = py + (dy * grid);
                 var s = pointToString([x, y]);
-                if(isWall(s) || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+                if((s in visited) || isWall(s) || x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
                     continue;
                 }
                 
                 // Skip start and end drawing
                 if((x == starting_point[0] && y == starting_point[1])){
                     continue;
+                }
+
+                visited[s] = 1;    // add node to visited
+
+                // draw neighbours
+                if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
                 }
 
                 // filter neighbours with worse astar dist
@@ -400,6 +425,7 @@ async function astar(){
                 // if(x != end_point[0] || y != end_point[1]){
                 //     drawRectangle(id, x, y, grid - 1, grid - 1, 'green');
                 // }
+                added = true;
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
                 pq.push([n_astar_dist, new_path]);
@@ -420,27 +446,67 @@ function alignToSVG(x, y){
     return [x, y];
 }
 
-var mouseClicked = false, mouseReleased = true, drawingAllowed = false;
+// Draw walls 
+
+var mouseClicked = false, mouseReleased = true;
+var orig_color = 'red';
+var clicked_color = 'green';
+var curr_color = orig_color;
+
+var orig_draw_text = 'Draw walls (off)';
+var clicked_draw_text = 'Draw walls (on)';
+var curr_draw_text = orig_draw_text;
+var curr_draw_state = [orig_color, orig_draw_text];
+
+function switchDrawState(){
+    curr_draw_state[0] = (curr_draw_state[0] == orig_color) ? clicked_color : orig_color;
+    curr_draw_state[1] = (curr_draw_state[1] == orig_draw_text) ? clicked_draw_text : orig_draw_text;
+    return curr_draw_state;
+}
+
+function cleanWallState(){
+    document.getElementById('draw_walls').style.color = orig_color;
+    document.getElementById('draw_walls').innerHTML = orig_draw_text;
+    curr_draw_state = [orig_color, orig_draw_text];
+    can_draw = false;
+}
+
+document.getElementById('draw_walls').addEventListener('click', function(){
+    can_draw = !can_draw;
+    var state = switchDrawState();
+    document.getElementById('draw_walls').style.color = state[0];
+    document.getElementById('draw_walls').innerHTML= state[1];
+}, false);
 
 document.getElementById(id).addEventListener("click", onMouseClick, false);
 document.getElementById(id).addEventListener("mousemove", onMouseMove, false);
 
 function onMouseClick(e) {
-    mouseClicked = !mouseClicked;
+    if(can_draw)
+        mouseClicked = !mouseClicked;
 }
 
 function onMouseMove(e) {
-    if (mouseClicked) {
-        var offsetx = document.getElementById('accordionSidebar').offsetWidth;
-        var offsety = document.getElementById('topbar').offsetHeight;
-        console.log("Clicked on canvas, x: " + e.clientX + ", y: " + e.clientY);
-        var point = alignToSVG(e.clientX - offsetx, e.clientY - offsety);
-        console.log("aligned, x: " + point[0] + ", y: " + point[1]);
-        drawRectangle(id, point[0] + 1, point[1] + 1, w, h, 'black');
+    if(can_draw){
+        if (mouseClicked) {
+            var offsetx = document.getElementById('accordionSidebar').offsetWidth;
+            var offsety = document.getElementById('topbar').offsetHeight;
+            console.log("Clicked on canvas, x: " + e.clientX + ", y: " + e.clientY);
+            var point = alignToSVG(e.clientX - offsetx, e.clientY - offsety);
+            console.log("aligned, x: " + point[0] + ", y: " + point[1]);
+            drawRectangle(id, point[0] + 1, point[1] + 1, w, h, 'black');
 
-        // add to walls
-        var s = pointToString([point[0] + 1, point[1] + 1]);
-        walls[s] = [point[0], point[1]];
+            // add to walls
+            var s = pointToString([point[0] + 1, point[1] + 1]);
+            walls[s] = [point[0], point[1]];
+        }
     }
 }
+
+document.getElementById('draw_walls').style.color = orig_color;
+document.getElementById('restart_search').addEventListener('click', function(){
+    cleanWallState();
+    cleanCanvas(id, true);
+});
+
 
