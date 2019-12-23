@@ -600,7 +600,6 @@ pre code {
 
 
 .row {
-  direction: rtl;
   display: flex;
   flex-wrap: wrap;
   margin-right: -0.75rem;
@@ -6216,6 +6215,10 @@ a.close.disabled {
 
 .align-text-top {
   vertical-align: text-top !important;
+}
+
+.bg-black {
+  background-color: black !important;
 }
 
 .bg-primary {
