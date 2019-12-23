@@ -4,3 +4,4 @@ This project simplify algorithms by providing with an easy to understand animati
 Site styling is done by Bootstrap resources.
 
 Algorithm pages and animations are coded by me.
+
