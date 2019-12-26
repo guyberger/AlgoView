@@ -7,6 +7,7 @@ var h = grid - 1;
 var starting_point = [grid * 10 + 1, grid * 15 + 1];
 var end_point = [grid * 40 + 1, grid * 15 + 1];
 var canvas = document.getElementById(id);
+var ctx = canvas.getContext('2d');
 var walls = {};
 
 var infinity = 99999;
@@ -18,6 +19,9 @@ var can_draw = false;
 
 var start_icon_name = 'start_icon_pic';
 var end_icon_name = 'end_icon_pic';
+
+var green = '#35D073';
+var blue = '#5199FF';
 
 
 cleanCanvas(id);
@@ -180,7 +184,8 @@ function drawRectangle(id, x, y, w, h, c){
 }
 
 // Draw entire bfs stage (defined by distance from starting point)
-function drawBfsStage(id, q, len){
+function drawBfsStage(id, q, len, radius){
+    console.log("started draw stage\n");
     for(var i = 0; i < q.length; i++){
         var path = q[i];
         console.log("path to draw: " + path);
@@ -189,7 +194,17 @@ function drawBfsStage(id, q, len){
         }
         var p = path[path.length - 1];
         if(p[0] != end_point[0] || p[1] != end_point[1]){
-            drawRectangle(id, p[0], p[1], w, h, 'blue');
+            var centerX = (p[0] - 1) + (grid / 2);
+            var centerY = (p[1] - 1) + (grid / 2);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = blue;
+            ctx.fill();
+            //ctx.lineWidth = 5;
+            ctx.strokeStyle = '#003300';
+            //ctx.stroke();
+            //drawRectangle(id, p[0], p[1], _len, _len, 'blue');
         }  
     }
 }
@@ -211,7 +226,7 @@ function updateOffset(){
 }
 
 // Every search algo starts here
-function startSearch(algo){
+async function startSearch(algo){
     updateOffset();
     getStartEndPoint();
     cleanCanvas(id);
@@ -231,8 +246,38 @@ function startSearch(algo){
     }
 }
 
+function drawSingleCircle(p, radius, color){
+    if(p[0] != end_point[0] || p[1] != end_point[1]){
+        var centerX = (p[0] - 1) + (grid / 2);
+        var centerY = (p[1] - 1) + (grid / 2);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#003300';
+    }
+}
+
+async function drawSolution(arr, radius){
+    for(var i = 0; i < arr.length; i++){
+        var p = arr[i];
+        if(p[0] != end_point[0] || p[1] != end_point[1]){
+            var centerX = (p[0] - 1) + (grid / 2);
+            var centerY = (p[1] - 1) + (grid / 2);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = green;
+            ctx.fill();
+            ctx.strokeStyle = '#003300';
+            await sleep(time_sleep);
+        }  
+    }
+}
+
 // paths are nested arrays
-async function bfs(){
+ async function bfs(){
     var hist = {};
     var q = [];
     var starting_path = [starting_point];
@@ -248,30 +293,34 @@ async function bfs(){
 
         // reached goal
         if(px == end_point[0] && py == end_point[1]){
+            var arr = [];
             for(var i = 0; i < curr_path.length; i++){
                 var point = curr_path[i];
                 var x = point[0];
                 var y = point[1];
+
                 // Skip start and end drawing
                 if((x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
                     continue;
                 }
-                drawRectangle(id, x, y, grid - 1, grid - 1, 'yellow');
-                await sleep(time_sleep_fast);
+                arr.push([x, y]);
+            }
+            for(var k = 0; k < (grid / 2); k++){
+                drawSolution(arr, k);
+                await sleep(time_sleep);
             }
             break;
         }
 
-        if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
-            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
-        }
-
-        // draw stage
         if(curr_path.length - 1 >= dist){
             console.log("stage: " + dist);
             dist++;
-            drawBfsStage(id, q, curr_path.length);
-            await sleep(time_sleep);
+            for(var k = 0; k < (grid / 2); k++){
+                drawBfsStage(id, q, curr_path.length, k);
+                drawSingleCircle(curr_path[curr_path.length - 1], k, blue);
+                await sleep(time_sleep_fast);
+            }
+            // await sleep(time_sleep);
         }
 
         // Adding neighbours
@@ -316,23 +365,30 @@ async function dfs(){
         var py = p[1];
 
         if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
-            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
+            for(var k = 0; k < (grid / 2); k++){
+                drawSingleCircle(p, k, blue);
+                await sleep(time_sleep_fast);
+            }
         }
 
 
-        // reached goal
+        // reached 
         if(px == end_point[0] && py == end_point[1]){
-            console.log("reached goal");
-            for(var i = 1; i < curr_path.length; i++){
+            var arr = [];
+            for(var i = 0; i < curr_path.length; i++){
                 var point = curr_path[i];
                 var x = point[0];
                 var y = point[1];
+
                 // Skip start and end drawing
-                if(isWall(s) || (x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
+                if((x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
                     continue;
                 }
-                drawRectangle(id, x, y, grid - 1, grid - 1, 'yellow');
-                await sleep(time_sleep_fast);
+                arr.push([x, y]);
+            }
+            for(var k = 0; k < (grid / 2); k++){
+                drawSolution(arr, k);
+                await sleep(time_sleep);
             }
             break;
         }
@@ -357,16 +413,16 @@ async function dfs(){
                 }
 
                 // draw neighbours
-                if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
-                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
-                }
+                // if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
+                //     drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
+                // }
 
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 new_path.push([x, y]);     // add neighbour to current path
                 stack.push(new_path);
             }
         }
-        await sleep(time_sleep);
+        // await sleep(time_sleep);
     }
     console.log("done");
 }
@@ -381,7 +437,7 @@ async function astar(){
     pq.push([infinity, starting_path]);
     var visited = {};
 
-    // perform dfs search
+    // perform astar search
     while(!pq.isEmpty()){
         var curr_path_with_hu = pq.pop();   // get best priority path (shortest dist).    path: [[x1, y1], [x2, y2], ...]
         var curr_path = curr_path_with_hu[1];
@@ -398,12 +454,16 @@ async function astar(){
         visited[s] = 1;    // add node to visited
 
         if((px != starting_point[0] || py != starting_point[1]) && (px != end_point[0] || py != end_point[1])){
-            drawRectangle(id, px, py, grid - 1, grid - 1, 'green');
+            for(var k = 0; k < (grid / 2); k++){
+                drawSingleCircle(p, k, blue);
+                await sleep(time_sleep_fast);
+            }
         }
 
         // reached goal
         if(px == end_point[0] && py == end_point[1]){
-            for(var i = 1; i < curr_path.length; i++){
+            var arr = [];
+            for(var i = 0; i < curr_path.length; i++){
                 var point = curr_path[i];
                 var x = point[0];
                 var y = point[1];
@@ -413,8 +473,11 @@ async function astar(){
                 if(isWall(s) || (x == starting_point[0] && y == starting_point[1]) || (x == end_point[0] && y == end_point[1])){
                     continue;
                 }
-                drawRectangle(id, x, y, grid - 1, grid - 1, 'yellow');
-                await sleep(time_sleep_fast);
+                arr.push([x, y]);
+            }
+            for(var k = 0; k < (grid / 2); k++){
+                drawSolution(arr, k);
+                await sleep(time_sleep);
             }
             break;
         }
@@ -442,18 +505,7 @@ async function astar(){
                 var n_huristic = heuristicAstar([x, y]);
                 var n_dist = (curr_dist + 1) * grid;    // how many grids we've walked so far
                 var n_astar_dist = n_huristic + n_dist;
-                // if(n_astar_dist > to_beat){
-                //     continue;
-                // }
-
-                // draw neighbours
-                if((x != starting_point[0] || y != starting_point[1]) && (x != end_point[0] || y != end_point[1])){
-                    drawRectangle(id, x, y, grid - 1, grid - 1, 'blue');
-                }
-
-                // if(x != end_point[0] || y != end_point[1]){
-                //     drawRectangle(id, x, y, grid - 1, grid - 1, 'green');
-                // }
+                
                 added = true;
                 let new_path = JSON.parse(JSON.stringify(curr_path));   // deep clone
                 let new_dist = JSON.parse(JSON.stringify(n_astar_dist));   // deep clone
@@ -461,7 +513,6 @@ async function astar(){
                 pq.push([new_dist, new_path]);
             }
         }
-        await sleep(time_sleep);
     }
     console.log("done");
 }
