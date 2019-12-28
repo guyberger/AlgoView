@@ -2,10 +2,10 @@ var grid = 16;
 var id = "graphMap";
 var time_sleep = 50;
 var time_sleep_fast = 5;
-var w = grid - 1;
-var h = grid - 1;
-var starting_point = [grid * 10 + 1, grid * 15 + 1];
-var end_point = [grid * 40 + 1, grid * 15 + 1];
+var w = grid;
+var h = grid;
+var starting_point = [grid * 10 , grid * 15];
+var end_point = [grid * 40, grid * 15];
 var canvas = document.getElementById(id);
 var ctx = canvas.getContext('2d');
 var walls = {};
@@ -23,8 +23,13 @@ var end_icon_name = 'end_icon_pic';
 var green = '#35D073';
 var blue = '#5199FF';
 
+cleanCanvas();
 
-cleanCanvas(id);
+window.addEventListener('resize', function(){
+    updateOffset();
+    getStartEndPoint();
+    cleanCanvas(true);
+})
 
 const _top = 0;
 const parent = i => ((i + 1) >>> 1) - 1;
@@ -37,14 +42,14 @@ function getStartEndPoint(){
     console.log(rect.top, rect.right, rect.bottom, rect.left);
     var x = parseInt((rect.left + rect.right) / 2) - offsetx, y = parseInt((rect.top + rect.bottom) / 2) - offsety;
     var p = alignToSVG(x, y);
-    starting_point = [p[0] + 1, p[1] + 1];
+    starting_point = [p[0], p[1]];
     sp = document.getElementById(end_icon_name);
     rect = sp.getBoundingClientRect();
     console.log(rect.top, rect.right, rect.bottom, rect.left);
     x = parseInt((rect.left + rect.right) / 2) - offsetx;
     y = parseInt((rect.top + rect.bottom) / 2) - offsety;
     p = alignToSVG(x, y);
-    end_point = [p[0] + 1, p[1] + 1];
+    end_point = [p[0], p[1]];
 }
 
 class PriorityQueue {
@@ -157,17 +162,17 @@ function drawWalls(){
         var canvas = document.getElementById(id);
         var ctx = canvas.getContext('2d');
         ctx.fillStyle = 'black';
-        ctx.fillRect(walls[key][0] + 1, walls[key][1] + 1, grid-1, grid-1);
+        ctx.fillRect(walls[key][0], walls[key][1], grid, grid);
     }
 }
 
-function cleanCanvas(id, clean_walls){
+function cleanCanvas(clean_walls){
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width - offsetx, canvas.height - offsety);
     drawGrid(window.innerWidth, window.innerHeight, id);
     if(clean_walls == undefined)
-        drawWalls(id);
+        drawWalls();
     else
         walls = {};
 }
@@ -194,8 +199,8 @@ function drawBfsStage(id, q, len, radius){
         }
         var p = path[path.length - 1];
         if(p[0] != end_point[0] || p[1] != end_point[1]){
-            var centerX = (p[0] - 1) + (grid / 2);
-            var centerY = (p[1] - 1) + (grid / 2);
+            var centerX = (p[0]) + (grid / 2);
+            var centerY = (p[1]) + (grid / 2);
 
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
@@ -229,7 +234,7 @@ function updateOffset(){
 async function startSearch(algo){
     updateOffset();
     getStartEndPoint();
-    cleanCanvas(id);
+    cleanCanvas();
     switch(algo){
         case 'bfs':
             bfs();
@@ -248,8 +253,8 @@ async function startSearch(algo){
 
 function drawSingleCircle(p, radius, color){
     if(p[0] != end_point[0] || p[1] != end_point[1]){
-        var centerX = (p[0] - 1) + (grid / 2);
-        var centerY = (p[1] - 1) + (grid / 2);
+        var centerX = (p[0]) + (grid / 2);
+        var centerY = (p[1]) + (grid / 2);
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
@@ -263,8 +268,8 @@ async function drawSolution(arr, radius){
     for(var i = 0; i < arr.length; i++){
         var p = arr[i];
         if(p[0] != end_point[0] || p[1] != end_point[1]){
-            var centerX = (p[0] - 1) + (grid / 2);
-            var centerY = (p[1] - 1) + (grid / 2);
+            var centerX = (p[0]) + (grid / 2);
+            var centerY = (p[1]) + (grid / 2);
 
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
@@ -575,10 +580,10 @@ function onMouseMove(e) {
             console.log("Clicked on canvas, x: " + e.clientX + ", y: " + e.clientY);
             var point = alignToSVG(e.clientX - offsetx, e.clientY - offsety);
             console.log("aligned, x: " + point[0] + ", y: " + point[1]);
-            drawRectangle(id, point[0] + 1, point[1] + 1, w, h, 'black');
+            drawRectangle(id, point[0], point[1], w, h, 'black');
 
             // add to walls
-            var s = pointToString([point[0] + 1, point[1] + 1]);
+            var s = pointToString([point[0], point[1]]);
             walls[s] = [point[0], point[1]];
         }
     }
@@ -587,7 +592,7 @@ function onMouseMove(e) {
 document.getElementById('draw_walls').style.color = orig_color;
 document.getElementById('restart_search').addEventListener('click', function(){
     cleanWallState();
-    cleanCanvas(id, true);
+    cleanCanvas(true);
 });
 
 
