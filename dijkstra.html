@@ -23,10 +23,42 @@
   <link href="css/sb-admin-2.min.css" rel="stylesheet">
   <link href="css/custom.css" rel="stylesheet">
 
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- Modal load -->
+  <script type="text/javascript">
+    $(window).on('load',function(){
+        $('#modalCenter').modal('show');
+    });
+  </script>
 
 </head>
 
 <body id="page-top">
+
+  <!-- Modal -->
+  <div class="modal fade" id="modalCenter" tabindex="-1" role="dialog" aria-labelledby="modalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLongTitle">Dijkstra's algorithm</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Dijkstra's algorithm (or Dijkstra's Shortest Path First algorithm, SPF algorithm) is an algorithm for finding the shortest paths between nodes in a graph.<br><br>
+          For a given source node in the graph, the algorithm finds the shortest path between that node and every other.<br><br>
+          In this example the graph represented by the grid tiles is non-weighted and so Dijkstra's algorithm acts exactly like the BFS algorithm.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Got it!</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm'">Read more</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -119,8 +151,6 @@
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
 
-            
-
             <div class="topbar-divider d-none d-sm-block"></div>
 
             <!-- Nav Item - User Information -->
@@ -172,7 +202,7 @@
             <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
               <a class="dropdown-item" href="#" id="draw_walls">Draw walls (off)</a>
               <a class="dropdown-item" href="#" id="restart_search">Restart</a>
-              <a class="dropdown-item" onclick="startSearch('dijkstra')" id="witness_btn"><b>Witness!</b></a>
+              <a class="dropdown-item" onclick="startSearch('dijkstra')" id="witness_btn"><b>Run!</b></a>
             </div>
           </div>         
 

@@ -23,10 +23,44 @@
   <link href="css/sb-admin-2.min.css" rel="stylesheet">
   <link href="css/custom.css" rel="stylesheet">
 
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- Modal load -->
+  <script type="text/javascript">
+    $(window).on('load',function(){
+        $('#modalCenter').modal('show');
+    });
+  </script>
 
 </head>
 
 <body id="page-top">
+
+  <!-- Modal -->
+  <div class="modal fade" id="modalCenter" tabindex="-1" role="dialog" aria-labelledby="modalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLongTitle">A-star</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          A* (pronounced "A-star") is a graph traversal and path search algorithm, which is often used in computer science due to its completeness, optimality, and optimal efficiency.<br><br>
+          A* is an informed search algorithm, or a best-first search, meaning that it is formulated in terms of weighted graphs: starting from a specific starting node of a graph, it aims to find a path to the given goal node having the smallest cost (least distance travelled, shortest time, etc.). It does this by maintaining a tree of paths originating at the start node and extending those paths one edge at a time until its termination criterion is satisfied.<br><br>       
+          At each iteration A star chooses to expand the 'cheapest' path, which is calculated based on the cost of the path (g) plus the estimated cost from the end of the path to the goal determined by a Heuristic function (h).<br><br>
+          Thus, the cost of a path p is determined by the formula:<br> <b>f(p) = g(p) + h(p)</b></br><br>
+          The cost (g) of a path in the following example is the number of tiles walked and the heuristic function (h) is the cartesian distance to the goal.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Got it!</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='https://en.wikipedia.org/wiki/A*_search_algorithm'">Read more</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -119,7 +153,6 @@
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
 
-
             <div class="topbar-divider d-none d-sm-block"></div>
 
             <!-- Nav Item - User Information -->
@@ -171,7 +204,7 @@
             <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
               <a class="dropdown-item" href="#" id="draw_walls">Draw walls (off)</a>
               <a class="dropdown-item" href="#" id="restart_search">Restart</a>
-              <a class="dropdown-item" onclick="startSearch('astar')" id="witness_btn"><b>Witness!</b></a>
+              <a class="dropdown-item" onclick="startSearch('astar')" id="witness_btn"><b>Run!</b></a>
             </div>
           </div>         
 
