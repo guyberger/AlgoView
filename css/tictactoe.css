@@ -1,0 +1,32 @@
+#board-container{
+    width: 420px;
+    height: 420px;
+    margin: 0 auto;
+    align-items: center;
+}
+
+.board-row{
+    display: flex;
+    flex-direction: row;
+}
+
+.board-box{
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+}
+.allb{
+    border: 2px solid black;
+}
+.rb{
+    border-right: 2px solid black;
+}
+.lb{
+    border-left: 2px solid black;
+}
+.tb{
+    border-top: 2px solid black;
+}
+.bb{
+    border-bottom: 2px solid black;
+}
